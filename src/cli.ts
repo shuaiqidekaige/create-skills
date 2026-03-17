@@ -6,6 +6,7 @@ interface CliOptions {
   url: string;
   useSkills: boolean;
   useAgentFile: boolean;
+  cwd?: string;
 }
 
 async function main(): Promise<void> {
@@ -14,7 +15,8 @@ async function main(): Promise<void> {
   const result = await syncRepository({
     url: argv.url,
     useSkills: argv.useSkills,
-    useAgentFile: argv.useAgentFile
+    useAgentFile: argv.useAgentFile,
+    cwd: argv.cwd
   });
 
   console.log("同步完成。");
@@ -52,6 +54,15 @@ function parseArguments(args: string[]): CliOptions {
         index += 1;
         break;
       }
+      case "--cwd": {
+        const cwd = args[index + 1];
+        if (!cwd || cwd.startsWith("--")) {
+          throw new Error("`--cwd` 需要传入目标目录。");
+        }
+        options.cwd = cwd;
+        index += 1;
+        break;
+      }
       case "--use-skills":
         options.useSkills = true;
         break;
@@ -69,6 +80,7 @@ function parseArguments(args: string[]): CliOptions {
 
   return {
     url: options.url,
+    cwd: options.cwd,
     useSkills: Boolean(options.useSkills),
     useAgentFile: Boolean(options.useAgentFile)
   };
@@ -76,10 +88,11 @@ function parseArguments(args: string[]): CliOptions {
 
 function printHelp(): void {
   console.log(`
-create-skills --url <repo-url> [--use-skills] [--use-agentFile]
+create-skills --url <repo-url> [--cwd <path>] [--use-skills] [--use-agentFile]
 
 参数:
   --url <repo-url>   GitHub 仓库地址，必填
+  --cwd <path>       指定写入目录，默认使用当前工作目录
   --use-skills       仅拉取 skills 目录
   --use-agentFile    仅拉取 AGENTS 模版文件
   -h, --help         查看帮助
